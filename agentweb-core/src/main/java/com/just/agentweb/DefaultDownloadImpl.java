@@ -46,6 +46,11 @@ import androidx.annotation.Nullable;
  */
 public class DefaultDownloadImpl implements android.webkit.DownloadListener {
     /**
+     * TAG 用于打印，标识
+     */
+    private static final String TAG = DefaultDownloadImpl.class.getSimpleName();
+    private static Handler mHandler = new Handler(Looper.getMainLooper());
+    /**
      * Application Context
      */
     protected Context mContext;
@@ -55,10 +60,6 @@ public class DefaultDownloadImpl implements android.webkit.DownloadListener {
      */
     protected WeakReference<Activity> mActivityWeakReference = null;
     /**
-     * TAG 用于打印，标识
-     */
-    private static final String TAG = DefaultDownloadImpl.class.getSimpleName();
-    /**
      * 权限拦截
      */
     protected PermissionInterceptor mPermissionListener = null;
@@ -66,9 +67,6 @@ public class DefaultDownloadImpl implements android.webkit.DownloadListener {
      * AbsAgentWebUIController
      */
     protected WeakReference<AbsAgentWebUIController> mAgentWebUIController;
-
-    private static Handler mHandler = new Handler(Looper.getMainLooper());
-
     private boolean isInstallDownloader;
 
     protected DefaultDownloadImpl(Activity activity, WebView webView, PermissionInterceptor permissionInterceptor) {
@@ -88,6 +86,11 @@ public class DefaultDownloadImpl implements android.webkit.DownloadListener {
         }
     }
 
+    public static DefaultDownloadImpl create(@NonNull Activity activity,
+                                             @NonNull WebView webView,
+                                             @Nullable PermissionInterceptor permissionInterceptor) {
+        return new DefaultDownloadImpl(activity, webView, permissionInterceptor);
+    }
 
     @Override
     public void onDownloadStart(final String url, final String userAgent, final String contentDisposition, final String mimetype, final long contentLength) {
@@ -237,11 +240,5 @@ public class DefaultDownloadImpl implements android.webkit.DownloadListener {
                 return super.onResult(throwable, path, url, extra);
             }
         });
-    }
-
-    public static DefaultDownloadImpl create(@NonNull Activity activity,
-                                             @NonNull WebView webView,
-                                             @Nullable PermissionInterceptor permissionInterceptor) {
-        return new DefaultDownloadImpl(activity, webView, permissionInterceptor);
     }
 }

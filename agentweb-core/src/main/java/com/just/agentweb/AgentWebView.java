@@ -67,6 +67,19 @@ public class AgentWebView extends LollipopFixedWebView {
         mFixedOnReceivedTitle = new FixedOnReceivedTitle();
     }
 
+    public static Pair<Boolean, String> isWebViewPackageException(Throwable e) {
+        String messageCause = e.getCause() == null ? e.toString() : e.getCause().toString();
+        String trace = Log.getStackTraceString(e);
+        if (trace.contains("android.content.pm.PackageManager$NameNotFoundException")
+                || trace.contains("java.lang.RuntimeException: Cannot load WebView")
+                || trace.contains("android.webkit.WebViewFactory$MissingWebViewPackageException: Failed to load WebView provider: No WebView installed")) {
+
+            LogUtils.safeCheckCrash(TAG, "isWebViewPackageException", e);
+            return new Pair<Boolean, String>(true, "WebView load failed, " + messageCause);
+        }
+        return new Pair<Boolean, String>(false, messageCause);
+    }
+
     /**
      * 经过大量的测试，按照以下方式才能保证JS脚本100%注入成功：
      * 1、在第一次loadUrl之前注入JS（在addJavascriptInterface里面注入即可，setWebViewClient和setWebChromeClient要在addJavascriptInterface之前执行）；
@@ -149,19 +162,6 @@ public class AgentWebView extends LollipopFixedWebView {
         if (mIsInited) {
             super.clearHistory();
         }
-    }
-
-    public static Pair<Boolean, String> isWebViewPackageException(Throwable e) {
-        String messageCause = e.getCause() == null ? e.toString() : e.getCause().toString();
-        String trace = Log.getStackTraceString(e);
-        if (trace.contains("android.content.pm.PackageManager$NameNotFoundException")
-                || trace.contains("java.lang.RuntimeException: Cannot load WebView")
-                || trace.contains("android.webkit.WebViewFactory$MissingWebViewPackageException: Failed to load WebView provider: No WebView installed")) {
-
-            LogUtils.safeCheckCrash(TAG, "isWebViewPackageException", e);
-            return new Pair<Boolean, String>(true, "WebView load failed, " + messageCause);
-        }
-        return new Pair<Boolean, String>(false, messageCause);
     }
 
     @Override
@@ -250,131 +250,6 @@ public class AgentWebView extends LollipopFixedWebView {
         sb.append(js);
         sb.append("}catch(e){console.warn(e)}");
         return sb.toString();
-    }
-
-
-    public static class AgentWebClient extends MiddlewareWebClientBase {
-
-        private AgentWebView mAgentWebView;
-
-        private AgentWebClient(AgentWebView agentWebView) {
-            this.mAgentWebView = agentWebView;
-        }
-
-
-        @Override
-        public void onPageStarted(WebView view, String url, Bitmap favicon) {
-            super.onPageStarted(view, url, favicon);
-            if (mAgentWebView.mJsCallJavas != null) {
-                mAgentWebView.injectJavaScript();
-                if (LogUtils.isDebug()) {
-                    Log.d(TAG, "injectJavaScript, onPageStarted.url = " + view.getUrl());
-                }
-            }
-            if (mAgentWebView.mInjectJavaScripts != null) {
-                mAgentWebView.injectExtraJavaScript();
-            }
-            mAgentWebView.mFixedOnReceivedTitle.onPageStarted();
-            mAgentWebView.fixedAccessibilityInjectorExceptionForOnPageFinished(url);
-        }
-
-        @Override
-        public void onPageFinished(WebView view, String url) {
-            super.onPageFinished(view, url);
-            mAgentWebView.mFixedOnReceivedTitle.onPageFinished(view);
-            if (LogUtils.isDebug()) {
-                Log.d(TAG, "onPageFinished.url = " + view.getUrl());
-            }
-        }
-
-
-    }
-
-    public static class AgentWebChrome extends MiddlewareWebChromeBase {
-
-        private AgentWebView mAgentWebView;
-
-        private AgentWebChrome(AgentWebView agentWebView) {
-            this.mAgentWebView = agentWebView;
-        }
-
-        @Override
-        public void onReceivedTitle(WebView view, String title) {
-            this.mAgentWebView.mFixedOnReceivedTitle.onReceivedTitle();
-            super.onReceivedTitle(view, title);
-        }
-
-        @Override
-        public void onProgressChanged(WebView view, int newProgress) {
-            if (this.mAgentWebView.mJsCallJavas != null) {
-                this.mAgentWebView.injectJavaScript();
-                if (LogUtils.isDebug()) {
-                    Log.d(TAG, "injectJavaScript, onProgressChanged.newProgress = " + newProgress + ", url = " + view.getUrl());
-                }
-            }
-            if (this.mAgentWebView.mInjectJavaScripts != null) {
-                this.mAgentWebView.injectExtraJavaScript();
-            }
-            super.onProgressChanged(view, newProgress);
-
-        }
-
-        @Override
-        public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
-            Log.i(TAG, "onJsPrompt:" + url + "  message:" + message + "  d:" + defaultValue + "  ");
-            if (this.mAgentWebView.mJsCallJavas != null && JsCallJava.isSafeWebViewCallMsg(message)) {
-                JSONObject jsonObject = JsCallJava.getMsgJSONObject(message);
-                String interfacedName = JsCallJava.getInterfacedName(jsonObject);
-                if (interfacedName != null) {
-                    JsCallJava mJsCallJava = this.mAgentWebView.mJsCallJavas.get(interfacedName);
-                    if (mJsCallJava != null) {
-                        result.confirm(mJsCallJava.call(view, jsonObject));
-                    }
-                }
-                return true;
-            } else {
-                return super.onJsPrompt(view, url, message, defaultValue, result);
-            }
-        }
-    }
-
-    /**
-     * 解决部分手机webView返回时不触发onReceivedTitle的问题（如：三星SM-G9008V 4.4.2）；
-     */
-    private static class FixedOnReceivedTitle {
-        private WebChromeClient mWebChromeClient;
-        private boolean mIsOnReceivedTitle;
-
-        public void setWebChromeClient(WebChromeClient webChromeClient) {
-            mWebChromeClient = webChromeClient;
-        }
-
-        public void onPageStarted() {
-            mIsOnReceivedTitle = false;
-        }
-
-        public void onPageFinished(WebView view) {
-            if (!mIsOnReceivedTitle && mWebChromeClient != null) {
-                WebBackForwardList list = null;
-                try {
-                    list = view.copyBackForwardList();
-                } catch (NullPointerException e) {
-                    if (LogUtils.isDebug()) {
-                        e.printStackTrace();
-                    }
-                }
-                if (list != null
-                        && list.getSize() > 0
-                        && list.getCurrentIndex() >= 0
-                        && list.getItemAtIndex(list.getCurrentIndex()) != null) {
-                    String previousTitle = list.getItemAtIndex(list.getCurrentIndex()).getTitle();
-                    mWebChromeClient.onReceivedTitle(view, previousTitle);
-                }
-            }
-        }
-        public void onReceivedTitle() {
-            mIsOnReceivedTitle = true;
-        }
     }
 
     // Activity在onDestory时调用webView的destroy，可以停止播放页面中的音频
@@ -522,6 +397,131 @@ public class AgentWebView extends LollipopFixedWebView {
     private void resetAccessibilityEnabled() {
         if (mIsAccessibilityEnabledOriginal != null) {
             setAccessibilityEnabled(mIsAccessibilityEnabledOriginal);
+        }
+    }
+
+    public static class AgentWebClient extends MiddlewareWebClientBase {
+
+        private AgentWebView mAgentWebView;
+
+        private AgentWebClient(AgentWebView agentWebView) {
+            this.mAgentWebView = agentWebView;
+        }
+
+
+        @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            super.onPageStarted(view, url, favicon);
+            if (mAgentWebView.mJsCallJavas != null) {
+                mAgentWebView.injectJavaScript();
+                if (LogUtils.isDebug()) {
+                    Log.d(TAG, "injectJavaScript, onPageStarted.url = " + view.getUrl());
+                }
+            }
+            if (mAgentWebView.mInjectJavaScripts != null) {
+                mAgentWebView.injectExtraJavaScript();
+            }
+            mAgentWebView.mFixedOnReceivedTitle.onPageStarted();
+            mAgentWebView.fixedAccessibilityInjectorExceptionForOnPageFinished(url);
+        }
+
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            super.onPageFinished(view, url);
+            mAgentWebView.mFixedOnReceivedTitle.onPageFinished(view);
+            if (LogUtils.isDebug()) {
+                Log.d(TAG, "onPageFinished.url = " + view.getUrl());
+            }
+        }
+
+
+    }
+
+    public static class AgentWebChrome extends MiddlewareWebChromeBase {
+
+        private AgentWebView mAgentWebView;
+
+        private AgentWebChrome(AgentWebView agentWebView) {
+            this.mAgentWebView = agentWebView;
+        }
+
+        @Override
+        public void onReceivedTitle(WebView view, String title) {
+            this.mAgentWebView.mFixedOnReceivedTitle.onReceivedTitle();
+            super.onReceivedTitle(view, title);
+        }
+
+        @Override
+        public void onProgressChanged(WebView view, int newProgress) {
+            if (this.mAgentWebView.mJsCallJavas != null) {
+                this.mAgentWebView.injectJavaScript();
+                if (LogUtils.isDebug()) {
+                    Log.d(TAG, "injectJavaScript, onProgressChanged.newProgress = " + newProgress + ", url = " + view.getUrl());
+                }
+            }
+            if (this.mAgentWebView.mInjectJavaScripts != null) {
+                this.mAgentWebView.injectExtraJavaScript();
+            }
+            super.onProgressChanged(view, newProgress);
+
+        }
+
+        @Override
+        public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
+            Log.i(TAG, "onJsPrompt:" + url + "  message:" + message + "  d:" + defaultValue + "  ");
+            if (this.mAgentWebView.mJsCallJavas != null && JsCallJava.isSafeWebViewCallMsg(message)) {
+                JSONObject jsonObject = JsCallJava.getMsgJSONObject(message);
+                String interfacedName = JsCallJava.getInterfacedName(jsonObject);
+                if (interfacedName != null) {
+                    JsCallJava mJsCallJava = this.mAgentWebView.mJsCallJavas.get(interfacedName);
+                    if (mJsCallJava != null) {
+                        result.confirm(mJsCallJava.call(view, jsonObject));
+                    }
+                }
+                return true;
+            } else {
+                return super.onJsPrompt(view, url, message, defaultValue, result);
+            }
+        }
+    }
+
+    /**
+     * 解决部分手机webView返回时不触发onReceivedTitle的问题（如：三星SM-G9008V 4.4.2）；
+     */
+    private static class FixedOnReceivedTitle {
+        private WebChromeClient mWebChromeClient;
+        private boolean mIsOnReceivedTitle;
+
+        public void setWebChromeClient(WebChromeClient webChromeClient) {
+            mWebChromeClient = webChromeClient;
+        }
+
+        public void onPageStarted() {
+            mIsOnReceivedTitle = false;
+        }
+
+        public void onPageFinished(WebView view) {
+            if (!mIsOnReceivedTitle && mWebChromeClient != null) {
+                WebBackForwardList list = null;
+                try {
+                    list = view.copyBackForwardList();
+                } catch (NullPointerException e) {
+                    if (LogUtils.isDebug()) {
+                        e.printStackTrace();
+                    }
+                }
+                if (list != null
+                        && list.getSize() > 0
+                        && list.getCurrentIndex() >= 0
+                        && list.getItemAtIndex(list.getCurrentIndex()) != null) {
+                    String previousTitle = list.getItemAtIndex(list.getCurrentIndex()).getTitle();
+                    mWebChromeClient.onReceivedTitle(view, previousTitle);
+                }
+            }
+        }
+
+        public void onReceivedTitle() {
+            mIsOnReceivedTitle = true;
         }
     }
 }

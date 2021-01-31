@@ -21,19 +21,19 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import static android.provider.MediaStore.EXTRA_OUTPUT;
 
 
-
 /**
- * @since 2.0.0
  * @author cenxiaozhong
+ * @since 2.0.0
  */
 public final class ActionActivity extends Activity {
 
@@ -41,12 +41,13 @@ public final class ActionActivity extends Activity {
     public static final String KEY_URI = "KEY_URI";
     public static final String KEY_FROM_INTENTION = "KEY_FROM_INTENTION";
     public static final String KEY_FILE_CHOOSER_INTENT = "KEY_FILE_CHOOSER_INTENT";
+    public static final int REQUEST_CODE = 0x254;
+    private static final String TAG = ActionActivity.class.getSimpleName();
     private static RationaleListener mRationaleListener;
     private static PermissionListener mPermissionListener;
     private static ChooserListener mChooserListener;
-    private static final String TAG = ActionActivity.class.getSimpleName();
     private Action mAction;
-    public static final int REQUEST_CODE = 0x254;
+    private Uri mUri;
 
     public static void start(Activity activity, Action action) {
         Intent mIntent = new Intent(activity, ActionActivity.class);
@@ -88,7 +89,7 @@ public final class ActionActivity extends Activity {
             permission(mAction);
         } else if (mAction.getAction() == Action.ACTION_CAMERA) {
             realOpenCamera();
-        } else if (mAction.getAction() == Action.ACTION_VIDEO){
+        } else if (mAction.getAction() == Action.ACTION_VIDEO) {
             realOpenVideo();
         } else {
             fetchFile(mAction);
@@ -159,16 +160,14 @@ public final class ActionActivity extends Activity {
             finish();
             return;
         }
-        if (mPermissionListener != null){
+        if (mPermissionListener != null) {
             requestPermissions(permissions.toArray(new String[]{}), 1);
         }
     }
 
-    private Uri mUri;
-
     private void realOpenCamera() {
         try {
-            if (mChooserListener == null){
+            if (mChooserListener == null) {
                 finish();
             }
             File mFile = AgentWebUtils.createImageFile(this);
@@ -187,15 +186,15 @@ public final class ActionActivity extends Activity {
                 mChooserListener.onChoiceResult(REQUEST_CODE, Activity.RESULT_CANCELED, null);
             }
             mChooserListener = null;
-            if (LogUtils.isDebug()){
+            if (LogUtils.isDebug()) {
                 ignore.printStackTrace();
             }
         }
     }
 
-    private void realOpenVideo(){
+    private void realOpenVideo() {
         try {
-            if (mChooserListener == null){
+            if (mChooserListener == null) {
                 finish();
             }
             File mFile = AgentWebUtils.createVideoFile(this);
@@ -214,7 +213,7 @@ public final class ActionActivity extends Activity {
                 mChooserListener.onChoiceResult(REQUEST_CODE, Activity.RESULT_CANCELED, null);
             }
             mChooserListener = null;
-            if (LogUtils.isDebug()){
+            if (LogUtils.isDebug()) {
                 ignore.printStackTrace();
             }
         }
@@ -232,6 +231,11 @@ public final class ActionActivity extends Activity {
         finish();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
     public interface RationaleListener {
         void onRationaleResult(boolean showRationale, Bundle extras);
     }
@@ -242,10 +246,5 @@ public final class ActionActivity extends Activity {
 
     public interface ChooserListener {
         void onChoiceResult(int requestCode, int resultCode, Intent data);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 }

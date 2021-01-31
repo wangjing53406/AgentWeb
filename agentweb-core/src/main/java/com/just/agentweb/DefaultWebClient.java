@@ -28,7 +28,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
-import androidx.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
@@ -51,27 +50,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import androidx.annotation.RequiresApi;
+
 /**
  * @author cenxiaozhong
  * @since 3.0.0
  */
 public class DefaultWebClient extends MiddlewareWebClientBase {
-    /**
-     * Activity's WeakReference
-     */
-    private WeakReference<Activity> mWeakReference = null;
-    /**
-     * 缩放
-     */
-    private static final int CONSTANTS_ABNORMAL_BIG = 7;
-    /**
-     * WebViewClient
-     */
-    private WebViewClient mWebViewClient;
-    /**
-     * mWebClientHelper
-     */
-    private boolean webClientHelper = true;
     /**
      * intent ' s scheme
      */
@@ -93,14 +78,6 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
      */
     public static final String HTTPS_SCHEME = "https://";
     /**
-     * true 表示当前应用内依赖了 alipay library , false  反之
-     */
-    private static final boolean HAS_ALIPAY_LIB;
-    /**
-     * WebViewClient's tag 用于打印
-     */
-    private static final String TAG = DefaultWebClient.class.getSimpleName();
-    /**
      * 直接打开其他页面
      */
     public static final int DERECT_OPEN_OTHER_PAGE = 1001;
@@ -112,6 +89,46 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
      * 不允许打开其他页面
      */
     public static final int DISALLOW_OPEN_OTHER_APP = DERECT_OPEN_OTHER_PAGE >> 4;
+    /**
+     * SMS scheme
+     */
+    public static final String SCHEME_SMS = "sms:";
+    /**
+     * 缩放
+     */
+    private static final int CONSTANTS_ABNORMAL_BIG = 7;
+    /**
+     * true 表示当前应用内依赖了 alipay library , false  反之
+     */
+    private static final boolean HAS_ALIPAY_LIB;
+    /**
+     * WebViewClient's tag 用于打印
+     */
+    private static final String TAG = DefaultWebClient.class.getSimpleName();
+
+    static {
+        boolean tag = true;
+        try {
+            Class.forName("com.alipay.sdk.app.PayTask");
+        } catch (Throwable ignore) {
+            tag = false;
+        }
+        HAS_ALIPAY_LIB = tag;
+        LogUtils.i(TAG, "HAS_ALIPAY_LIB:" + HAS_ALIPAY_LIB);
+    }
+
+    /**
+     * Activity's WeakReference
+     */
+    private WeakReference<Activity> mWeakReference = null;
+    /**
+     * WebViewClient
+     */
+    private WebViewClient mWebViewClient;
+    /**
+     * mWebClientHelper
+     */
+    private boolean webClientHelper = true;
     /**
      * 默认为咨询用户
      */
@@ -141,10 +158,6 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
      */
     private Object mPayTask;
     /**
-     * SMS scheme
-     */
-    public static final String SCHEME_SMS = "sms:";
-    /**
      * 缓存当前出现错误的页面
      */
     private Set<String> mErrorUrlsSet = new HashSet<>();
@@ -152,17 +165,6 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
      * 缓存等待加载完成的页面 onPageStart()执行之后 ，onPageFinished()执行之前
      */
     private Set<String> mWaittingFinishSet = new HashSet<>();
-
-    static {
-        boolean tag = true;
-        try {
-            Class.forName("com.alipay.sdk.app.PayTask");
-        } catch (Throwable ignore) {
-            tag = false;
-        }
-        HAS_ALIPAY_LIB = tag;
-        LogUtils.i(TAG, "HAS_ALIPAY_LIB:" + HAS_ALIPAY_LIB);
-    }
 
 
     DefaultWebClient(Builder builder) {
@@ -178,6 +180,10 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
         } else {
             mUrlHandleWays = builder.mUrlHandleWays;
         }
+    }
+
+    public static Builder createBuilder() {
+        return new Builder();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -310,7 +316,6 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
         return super.shouldOverrideUrlLoading(view, url);
     }
 
-
     private int queryActiviesNumber(String url) {
         try {
             if (mWeakReference.get() == null) {
@@ -343,7 +348,6 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
             }
         }
     }
-
 
     private ResolveInfo lookupResolveInfo(String url) {
         try {
@@ -428,7 +432,6 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
         return false;
     }
 
-
     private boolean handleCommonLink(String url) {
         if (url.startsWith(WebView.SCHEME_TEL)
                 || url.startsWith(SCHEME_SMS)
@@ -461,7 +464,6 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
 
     }
 
-
     /**
      * MainFrame Error
      *
@@ -475,7 +477,6 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
         LogUtils.i(TAG, "onReceivedError：" + description + "  CODE:" + errorCode);
         onMainFrameError(view, errorCode, description, failingUrl);
     }
-
 
     @TargetApi(Build.VERSION_CODES.M)
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -511,7 +512,6 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
 //        this.mWebView.setVisibility(View.GONE);
     }
 
-
     @Override
     public void onPageFinished(WebView view, String url) {
         if (!mErrorUrlsSet.contains(url) && mWaittingFinishSet.contains(url)) {
@@ -530,12 +530,10 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
         super.onPageFinished(view, url);
     }
 
-
     @Override
     public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event) {
         return super.shouldOverrideKeyEvent(view, event);
     }
-
 
     private void startActivity(String url) {
         try {
@@ -586,9 +584,24 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
         };
     }
 
+    public static enum OpenOtherPageWays {
+        /**
+         * 直接打开跳转页
+         */
+        DERECT(DefaultWebClient.DERECT_OPEN_OTHER_PAGE),
+        /**
+         * 咨询用户是否打开
+         */
+        ASK(DefaultWebClient.ASK_USER_OPEN_OTHER_PAGE),
+        /**
+         * 禁止打开其他页面
+         */
+        DISALLOW(DefaultWebClient.DISALLOW_OPEN_OTHER_APP);
+        int code;
 
-    public static Builder createBuilder() {
-        return new Builder();
+        OpenOtherPageWays(int code) {
+            this.code = code;
+        }
     }
 
     public static class Builder {
@@ -637,26 +650,6 @@ public class DefaultWebClient extends MiddlewareWebClientBase {
 
         public DefaultWebClient build() {
             return new DefaultWebClient(this);
-        }
-    }
-
-    public static enum OpenOtherPageWays {
-        /**
-         * 直接打开跳转页
-         */
-        DERECT(DefaultWebClient.DERECT_OPEN_OTHER_PAGE),
-        /**
-         * 咨询用户是否打开
-         */
-        ASK(DefaultWebClient.ASK_USER_OPEN_OTHER_PAGE),
-        /**
-         * 禁止打开其他页面
-         */
-        DISALLOW(DefaultWebClient.DISALLOW_OPEN_OTHER_APP);
-        int code;
-
-        OpenOtherPageWays(int code) {
-            this.code = code;
         }
     }
 }

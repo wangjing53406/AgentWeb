@@ -25,17 +25,37 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
+
+import androidx.annotation.Nullable;
 
 /**
  * @author cenxiaozhong
  * @since 1.0.0
  */
 public class WebIndicator extends BaseIndicatorView implements BaseIndicatorSpec {
+    /**
+     * 默认匀速动画最大的时长
+     */
+    public static final int MAX_UNIFORM_SPEED_DURATION = 8 * 1000;
+    /**
+     * 默认加速后减速动画最大时长
+     */
+    public static final int MAX_DECELERATE_SPEED_DURATION = 450;
+    /**
+     * 结束动画时长 ， Fade out 。
+     */
+    public static final int DO_END_ANIMATION_DURATION = 600;
+    public static final int UN_START = 0;
+    public static final int STARTED = 1;
+    public static final int FINISH = 2;
+    /**
+     * 默认的高度
+     */
+    public int mWebIndicatorDefaultHeight = 3;
     /**
      * 进度条颜色
      */
@@ -53,18 +73,6 @@ public class WebIndicator extends BaseIndicatorView implements BaseIndicatorSpec
      */
     private int mTargetWidth = 0;
     /**
-     * 默认匀速动画最大的时长
-     */
-    public static final int MAX_UNIFORM_SPEED_DURATION = 8 * 1000;
-    /**
-     * 默认加速后减速动画最大时长
-     */
-    public static final int MAX_DECELERATE_SPEED_DURATION = 450;
-    /**
-     * 结束动画时长 ， Fade out 。
-     */
-    public static final int DO_END_ANIMATION_DURATION = 600;
-    /**
      * 当前匀速动画最大的时长
      */
     private int mCurrentMaxUniformSpeedDuration = MAX_UNIFORM_SPEED_DURATION;
@@ -80,14 +88,21 @@ public class WebIndicator extends BaseIndicatorView implements BaseIndicatorSpec
      * 当前进度条的状态
      */
     private int indicatorStatus = 0;
-    public static final int UN_START = 0;
-    public static final int STARTED = 1;
-    public static final int FINISH = 2;
     private float mCurrentProgress = 0F;
-    /**
-     * 默认的高度
-     */
-    public int mWebIndicatorDefaultHeight = 3;
+    private ValueAnimator.AnimatorUpdateListener mAnimatorUpdateListener = new ValueAnimator.AnimatorUpdateListener() {
+        @Override
+        public void onAnimationUpdate(ValueAnimator animation) {
+            float t = (float) animation.getAnimatedValue();
+            WebIndicator.this.mCurrentProgress = t;
+            WebIndicator.this.invalidate();
+        }
+    };
+    private AnimatorListenerAdapter mAnimatorListenerAdapter = new AnimatorListenerAdapter() {
+        @Override
+        public void onAnimationEnd(Animator animation) {
+            doEnd();
+        }
+    };
 
     public WebIndicator(Context context) {
         this(context, null);
@@ -137,7 +152,6 @@ public class WebIndicator extends BaseIndicatorView implements BaseIndicatorSpec
         }
         this.setMeasuredDimension(w, h);
     }
-
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -248,22 +262,6 @@ public class WebIndicator extends BaseIndicatorView implements BaseIndicatorSpec
         }
         indicatorStatus = STARTED;
     }
-
-    private ValueAnimator.AnimatorUpdateListener mAnimatorUpdateListener = new ValueAnimator.AnimatorUpdateListener() {
-        @Override
-        public void onAnimationUpdate(ValueAnimator animation) {
-            float t = (float) animation.getAnimatedValue();
-            WebIndicator.this.mCurrentProgress = t;
-            WebIndicator.this.invalidate();
-        }
-    };
-
-    private AnimatorListenerAdapter mAnimatorListenerAdapter = new AnimatorListenerAdapter() {
-        @Override
-        public void onAnimationEnd(Animator animation) {
-            doEnd();
-        }
-    };
 
     @Override
     protected void onDetachedFromWindow() {

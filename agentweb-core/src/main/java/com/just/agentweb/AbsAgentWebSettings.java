@@ -32,18 +32,18 @@ import android.webkit.WebViewClient;
  */
 
 public abstract class AbsAgentWebSettings implements IAgentWebSettings, WebListenerManager {
-    private WebSettings mWebSettings;
-    private static final String TAG = AbsAgentWebSettings.class.getSimpleName();
     public static final String USERAGENT_UC = " UCBrowser/11.6.4.950 ";
     public static final String USERAGENT_QQ_BROWSER = " MQQBrowser/8.0 ";
     public static final String USERAGENT_AGENTWEB = " " + AgentWebConfig.AGENTWEB_VERSION + " ";
+    private static final String TAG = AbsAgentWebSettings.class.getSimpleName();
     protected AgentWeb mAgentWeb;
+    private WebSettings mWebSettings;
+
+    public AbsAgentWebSettings() {
+    }
 
     public static AbsAgentWebSettings getInstance() {
         return new AgentWebSettingsImpl();
-    }
-
-    public AbsAgentWebSettings() {
     }
 
     final void bindAgentWeb(AgentWeb agentWeb) {

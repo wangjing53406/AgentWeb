@@ -6,7 +6,7 @@ package com.just.agentweb;
  * @since 1.0.0
  */
 public class WebViewClient extends MiddlewareWebClientBase {
-	public WebViewClient() {
-	}
+    public WebViewClient() {
+    }
 
 }

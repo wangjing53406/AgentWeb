@@ -56,7 +56,7 @@ public class JsCallJava {
             sb.append(mInterfacedName);
             sb.append(" init begin\");var a={queue:[],callback:function(){var d=Array.prototype.slice.call(arguments,0);var c=d.shift();var e=d.shift();this.queue[c].apply(this,d);if(!e){delete this.queue[c]}}};");
             for (Method method : methods) {
-                Log.i("Info","method:"+method);
+                Log.i("Info", "method:" + method);
                 String sign;
                 if ((sign = genJavaMethodSign(method)) == null) {
                     continue;
@@ -84,6 +84,43 @@ public class JsCallJava {
                 Log.e(TAG, "init js result:" + e.getMessage());
             }
         }
+    }
+
+    private static String promptMsgFormat(String object, String method, String types, String args) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        sb.append(KEY_OBJ).append(":").append(object).append(",");
+        sb.append(KEY_METHOD).append(":").append(method).append(",");
+        sb.append(KEY_TYPES).append(":").append(types).append(",");
+        sb.append(KEY_ARGS).append(":").append(args);
+        sb.append("}");
+        return sb.toString();
+    }
+
+    /**
+     * 是否是“Java接口类中方法调用”的内部消息；
+     *
+     * @param message
+     * @return
+     */
+    static boolean isSafeWebViewCallMsg(String message) {
+        return message.startsWith(MSG_PROMPT_HEADER);
+    }
+
+    static JSONObject getMsgJSONObject(String message) {
+        message = message.substring(MSG_PROMPT_HEADER.length());
+        JSONObject jsonObject;
+        try {
+            jsonObject = new JSONObject(message);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            jsonObject = new JSONObject();
+        }
+        return jsonObject;
+    }
+
+    static String getInterfacedName(JSONObject jsonObject) {
+        return jsonObject.optString(KEY_OBJ);
     }
 
     private String genJavaMethodSign(Method method) {
@@ -221,42 +258,5 @@ public class JsCallJava {
             Log.d(TAG, "call time: " + (android.os.SystemClock.uptimeMillis() - time) + ", request: " + reqJson + ", result:" + resStr);
         }
         return resStr;
-    }
-
-    private static String promptMsgFormat(String object, String method, String types, String args) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        sb.append(KEY_OBJ).append(":").append(object).append(",");
-        sb.append(KEY_METHOD).append(":").append(method).append(",");
-        sb.append(KEY_TYPES).append(":").append(types).append(",");
-        sb.append(KEY_ARGS).append(":").append(args);
-        sb.append("}");
-        return sb.toString();
-    }
-
-    /**
-     * 是否是“Java接口类中方法调用”的内部消息；
-     *
-     * @param message
-     * @return
-     */
-    static boolean isSafeWebViewCallMsg(String message) {
-        return message.startsWith(MSG_PROMPT_HEADER);
-    }
-
-    static JSONObject getMsgJSONObject(String message) {
-        message = message.substring(MSG_PROMPT_HEADER.length());
-        JSONObject jsonObject;
-        try {
-            jsonObject = new JSONObject(message);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            jsonObject = new JSONObject();
-        }
-        return jsonObject;
-    }
-
-    static String getInterfacedName(JSONObject jsonObject) {
-        return jsonObject.optString(KEY_OBJ);
     }
 }

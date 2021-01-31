@@ -36,8 +36,8 @@ import android.webkit.WebViewClient;
  */
 public class WebViewClientDelegate extends WebViewClient {
 
-    private WebViewClient mDelegate;
     private static final String TAG = WebViewClientDelegate.class.getSimpleName();
+    private WebViewClient mDelegate;
 
     WebViewClientDelegate(WebViewClient client) {
         this.mDelegate = client;

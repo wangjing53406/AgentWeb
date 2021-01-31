@@ -18,8 +18,9 @@ package com.just.agentweb;
 
 import android.annotation.TargetApi;
 import android.os.Build;
-import androidx.collection.ArrayMap;
 import android.webkit.WebView;
+
+import androidx.collection.ArrayMap;
 
 
 /**
@@ -29,12 +30,12 @@ public class WebSecurityLogicImpl implements WebSecurityCheckLogic {
     private String TAG = this.getClass().getSimpleName();
     private int webviewType;
 
-    public static WebSecurityLogicImpl getInstance(int webViewType) {
-        return new WebSecurityLogicImpl(webViewType);
-    }
-
     public WebSecurityLogicImpl(int webViewType) {
         this.webviewType = webViewType;
+    }
+
+    public static WebSecurityLogicImpl getInstance(int webViewType) {
+        return new WebSecurityLogicImpl(webViewType);
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)

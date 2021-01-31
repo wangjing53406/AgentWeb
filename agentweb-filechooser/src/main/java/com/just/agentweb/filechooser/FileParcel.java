@@ -25,6 +25,17 @@ import android.os.Parcelable;
  */
 public class FileParcel implements Parcelable {
 
+    public static final Creator<FileParcel> CREATOR = new Creator<FileParcel>() {
+        @Override
+        public FileParcel createFromParcel(Parcel in) {
+            return new FileParcel(in);
+        }
+
+        @Override
+        public FileParcel[] newArray(int size) {
+            return new FileParcel[size];
+        }
+    };
     private int mId;
     private String mContentPath;
     private String mFileBase64;
@@ -41,18 +52,6 @@ public class FileParcel implements Parcelable {
         this.mFileBase64 = fileBase64;
 
     }
-
-    public static final Creator<FileParcel> CREATOR = new Creator<FileParcel>() {
-        @Override
-        public FileParcel createFromParcel(Parcel in) {
-            return new FileParcel(in);
-        }
-
-        @Override
-        public FileParcel[] newArray(int size) {
-            return new FileParcel[size];
-        }
-    };
 
     public int getId() {
         return mId;

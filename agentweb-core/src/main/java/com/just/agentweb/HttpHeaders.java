@@ -17,10 +17,11 @@
 package com.just.agentweb;
 
 import android.net.Uri;
-import androidx.collection.ArrayMap;
 import android.text.TextUtils;
 
 import java.util.Map;
+
+import androidx.collection.ArrayMap;
 
 
 /**
@@ -29,14 +30,14 @@ import java.util.Map;
  * @since 2.0.0
  */
 public class HttpHeaders {
-    public static HttpHeaders create() {
-        return new HttpHeaders();
-    }
-
     private final Map<String, Map<String, String>> mHeaders;
 
     HttpHeaders() {
         mHeaders = new ArrayMap<String, Map<String, String>>();
+    }
+
+    public static HttpHeaders create() {
+        return new HttpHeaders();
     }
 
     public Map<String, String> getHeaders(String url) {

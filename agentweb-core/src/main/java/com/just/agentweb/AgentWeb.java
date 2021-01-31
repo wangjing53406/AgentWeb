@@ -17,13 +17,6 @@
 package com.just.agentweb;
 
 import android.app.Activity;
-import androidx.annotation.ColorInt;
-import androidx.annotation.IdRes;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.collection.ArrayMap;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
@@ -35,6 +28,14 @@ import android.webkit.WebViewClient;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.IdRes;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.collection.ArrayMap;
+import androidx.fragment.app.Fragment;
+
 /**
  * @author cenxiaozhong
  * @update 4.0.0
@@ -45,6 +46,14 @@ public final class AgentWeb {
      * AgentWeb 's TAG
      */
     private static final String TAG = AgentWeb.class.getSimpleName();
+    /**
+     * Activity
+     */
+    private static final int ACTIVITY_TAG = 0;
+    /**
+     * Fragment
+     */
+    private static final int FRAGMENT_TAG = 1;
     /**
      * Activity
      */
@@ -113,14 +122,6 @@ public final class AgentWeb {
      * flag security 's mode
      */
     private SecurityType mSecurityType = SecurityType.DEFAULT_CHECK;
-    /**
-     * Activity
-     */
-    private static final int ACTIVITY_TAG = 0;
-    /**
-     * Fragment
-     */
-    private static final int FRAGMENT_TAG = 1;
     /**
      * AgentWeb 默认注入对像
      */
@@ -214,6 +215,20 @@ public final class AgentWeb {
         init();
     }
 
+    public static AgentBuilder with(@NonNull Activity activity) {
+        if (activity == null) {
+            throw new NullPointerException("activity can not be null .");
+        }
+        return new AgentBuilder(activity);
+    }
+
+    public static AgentBuilder with(@NonNull Fragment fragment) {
+        Activity mActivity = null;
+        if ((mActivity = fragment.getActivity()) == null) {
+            throw new NullPointerException("activity can not be null .");
+        }
+        return new AgentBuilder(mActivity, fragment);
+    }
 
     /**
      * @return PermissionInterceptor 权限控制者
@@ -234,7 +249,6 @@ public final class AgentWeb {
         return mJsAccessEntrace;
     }
 
-
     public AgentWeb clearWebCache() {
         if (this.getWebCreator().getWebView() != null) {
             AgentWebUtils.clearWebViewAllCache(mActivity, this.getWebCreator().getWebView());
@@ -242,22 +256,6 @@ public final class AgentWeb {
             AgentWebUtils.clearWebViewAllCache(mActivity);
         }
         return this;
-    }
-
-
-    public static AgentBuilder with(@NonNull Activity activity) {
-        if (activity == null) {
-            throw new NullPointerException("activity can not be null .");
-        }
-        return new AgentBuilder(activity);
-    }
-
-    public static AgentBuilder with(@NonNull Fragment fragment) {
-        Activity mActivity = null;
-        if ((mActivity = fragment.getActivity()) == null) {
-            throw new NullPointerException("activity can not be null .");
-        }
-        return new AgentBuilder(mActivity, fragment);
     }
 
     public boolean handleKeyEvent(int keyCode, KeyEvent keyEvent) {
@@ -302,35 +300,6 @@ public final class AgentWeb {
 
     public void destroy() {
         this.mWebLifeCycle.onDestroy();
-    }
-
-    public static class PreAgentWeb {
-        private AgentWeb mAgentWeb;
-        private boolean isReady = false;
-
-        PreAgentWeb(AgentWeb agentWeb) {
-            this.mAgentWeb = agentWeb;
-        }
-
-        public PreAgentWeb ready() {
-            if (!isReady) {
-                mAgentWeb.ready();
-                isReady = true;
-            }
-            return this;
-        }
-
-        public AgentWeb get() {
-            ready();
-            return mAgentWeb;
-        }
-
-        public AgentWeb go(@Nullable String url) {
-            if (!isReady) {
-                ready();
-            }
-            return mAgentWeb.go(url);
-        }
     }
 
     private void doSafeCheck() {
@@ -478,8 +447,41 @@ public final class AgentWeb {
         }
     }
 
+    Activity getActivity() {
+        return this.mActivity;
+    }
+
     public enum SecurityType {
         DEFAULT_CHECK, STRICT_CHECK;
+    }
+
+    public static class PreAgentWeb {
+        private AgentWeb mAgentWeb;
+        private boolean isReady = false;
+
+        PreAgentWeb(AgentWeb agentWeb) {
+            this.mAgentWeb = agentWeb;
+        }
+
+        public PreAgentWeb ready() {
+            if (!isReady) {
+                mAgentWeb.ready();
+                isReady = true;
+            }
+            return this;
+        }
+
+        public AgentWeb get() {
+            ready();
+            return mAgentWeb;
+        }
+
+        public AgentWeb go(@Nullable String url) {
+            if (!isReady) {
+                ready();
+            }
+            return mAgentWeb.go(url);
+        }
     }
 
     public static final class AgentBuilder {
@@ -740,10 +742,6 @@ public final class AgentWeb {
             this.mAgentBuilder.mIsInterceptUnkownUrl = true;
             return this;
         }
-    }
-
-    Activity getActivity() {
-        return this.mActivity;
     }
 
     private static final class PermissionInterceptorWrapper implements PermissionInterceptor {

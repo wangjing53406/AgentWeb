@@ -33,11 +33,6 @@ import android.webkit.WebView;
 public abstract class AbsAgentWebUIController {
 
     public static boolean HAS_DESIGN_LIB = false;
-    private Activity mActivity;
-    private WebParentLayout mWebParentLayout;
-    private volatile boolean mIsBindWebParent = false;
-    protected AbsAgentWebUIController mAgentWebUIControllerDelegate;
-    protected String TAG = this.getClass().getSimpleName();
 
     static {
         try {
@@ -50,7 +45,13 @@ public abstract class AbsAgentWebUIController {
                 ignore.printStackTrace();
             }
         }
-	}
+    }
+
+    protected AbsAgentWebUIController mAgentWebUIControllerDelegate;
+    protected String TAG = this.getClass().getSimpleName();
+    private Activity mActivity;
+    private WebParentLayout mWebParentLayout;
+    private volatile boolean mIsBindWebParent = false;
 
     protected AbsAgentWebUIController create() {
         return HAS_DESIGN_LIB ? new DefaultDesignUIController() : new DefaultUIController();

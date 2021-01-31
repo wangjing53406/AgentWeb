@@ -20,9 +20,9 @@ AgentWeb Sample shows AgentWeb library powerful features, detailed link, please 
 * Gradle 
   
    ```
-    api 'com.just.agentweb:agentweb:4.1.4' // (Required)
-    api 'com.just.agentweb:filechooser:4.1.4'// (optional)
-    api 'com.download.library:Downloader:4.1.4'// (optional)
+   implementation 'com.wandroid:agentweb-androidx:1.0.0' // (必选)
+   implementation 'com.wandroid:agentweb-filechooser-androidx:1.0.0'// (可选)
+   implementation 'com.wandroid:downloader-androidx:1.0.0'// (可选)
    ```
 	
 	

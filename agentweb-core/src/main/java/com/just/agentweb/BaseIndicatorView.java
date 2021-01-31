@@ -17,9 +17,10 @@
 package com.just.agentweb;
 
 import android.content.Context;
-import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
+
+import androidx.annotation.Nullable;
 
 
 /**
@@ -27,7 +28,7 @@ import android.widget.FrameLayout;
  * @date 2017/5/12
  * @since 1.0.0
  */
-public abstract class BaseIndicatorView extends FrameLayout implements BaseIndicatorSpec,LayoutParamsOffer{
+public abstract class BaseIndicatorView extends FrameLayout implements BaseIndicatorSpec, LayoutParamsOffer {
     public BaseIndicatorView(Context context) {
         super(context);
     }

@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Build;
-import androidx.core.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -32,14 +31,16 @@ import android.widget.FrameLayout;
 import java.util.HashSet;
 import java.util.Set;
 
+import androidx.core.util.Pair;
+
 /**
  * @author cenxiaozhong
  */
 public class VideoImpl implements IVideo, EventInterceptor {
 
+    private static final String TAG = VideoImpl.class.getSimpleName();
     private Activity mActivity;
     private WebView mWebView;
-    private static final String TAG = VideoImpl.class.getSimpleName();
     private Set<Pair<Integer, Integer>> mFlags = null;
     private View mMoiveView = null;
     private ViewGroup mMoiveParentView = null;

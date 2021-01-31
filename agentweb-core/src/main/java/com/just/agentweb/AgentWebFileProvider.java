@@ -18,12 +18,13 @@ package com.just.agentweb;
 
 import android.content.Context;
 import android.content.pm.ProviderInfo;
+
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 
 /**
- * @since 2.0.0
  * @author cenxiaozhong
+ * @since 2.0.0
  */
 public class AgentWebFileProvider extends FileProvider {
 

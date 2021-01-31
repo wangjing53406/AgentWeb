@@ -20,7 +20,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Message;
-import androidx.annotation.RequiresApi;
 import android.view.View;
 import android.webkit.ConsoleMessage;
 import android.webkit.GeolocationPermissions;
@@ -34,6 +33,8 @@ import android.webkit.WebView;
 
 import java.lang.reflect.Method;
 
+import androidx.annotation.RequiresApi;
+
 /**
  * @author cenxiaozhong
  * @update WebChromeClientDelegate
@@ -42,12 +43,12 @@ import java.lang.reflect.Method;
 public class WebChromeClientDelegate extends WebChromeClient {
     private WebChromeClient mDelegate;
 
-    protected WebChromeClient getDelegate() {
-        return mDelegate;
-    }
-
     public WebChromeClientDelegate(WebChromeClient webChromeClient) {
         this.mDelegate = webChromeClient;
+    }
+
+    protected WebChromeClient getDelegate() {
+        return mDelegate;
     }
 
     void setDelegate(WebChromeClient delegate) {

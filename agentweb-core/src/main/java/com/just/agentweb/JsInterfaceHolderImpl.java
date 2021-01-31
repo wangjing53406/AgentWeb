@@ -33,15 +33,15 @@ public class JsInterfaceHolderImpl extends JsBaseInterfaceHolder {
     private AgentWeb.SecurityType mSecurityType;
     private WebView mWebView;
 
-    static JsInterfaceHolderImpl getJsInterfaceHolder(WebCreator webCreator, AgentWeb.SecurityType securityType) {
-        return new JsInterfaceHolderImpl(webCreator, securityType);
-    }
-
     JsInterfaceHolderImpl(WebCreator webCreator, AgentWeb.SecurityType securityType) {
         super(webCreator, securityType);
         this.mWebCreator = webCreator;
         this.mWebView = mWebCreator.getWebView();
         this.mSecurityType = securityType;
+    }
+
+    static JsInterfaceHolderImpl getJsInterfaceHolder(WebCreator webCreator, AgentWeb.SecurityType securityType) {
+        return new JsInterfaceHolderImpl(webCreator, securityType);
     }
 
     @Override

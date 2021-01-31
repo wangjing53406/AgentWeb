@@ -16,24 +16,26 @@
 package com.just.agentweb;
 
 import android.content.Context;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+
 import androidx.core.view.MotionEventCompat;
 import androidx.core.view.NestedScrollingChild;
 import androidx.core.view.NestedScrollingChildHelper;
 import androidx.core.view.ViewCompat;
-import android.util.AttributeSet;
-import android.view.MotionEvent;
 
 /**
  * 结合CoordinatorLayout可以与Toolbar联动的webview
+ *
  * @author LeonDevLifeLog
  * @since 4.0.0
  */
 
 public class NestedScrollAgentWebView extends AgentWebView implements NestedScrollingChild {
 
-    private int mLastMotionY;
     private final int[] mScrollOffset = new int[2];
     private final int[] mScrollConsumed = new int[2];
+    private int mLastMotionY;
     private int mNestedYOffset;
     private NestedScrollingChildHelper mChildHelper;
 
@@ -104,13 +106,13 @@ public class NestedScrollAgentWebView extends AgentWebView implements NestedScro
     }
 
     @Override
-    public void setNestedScrollingEnabled(boolean enabled) {
-        mChildHelper.setNestedScrollingEnabled(enabled);
+    public boolean isNestedScrollingEnabled() {
+        return mChildHelper.isNestedScrollingEnabled();
     }
 
     @Override
-    public boolean isNestedScrollingEnabled() {
-        return mChildHelper.isNestedScrollingEnabled();
+    public void setNestedScrollingEnabled(boolean enabled) {
+        mChildHelper.setNestedScrollingEnabled(enabled);
     }
 
     @Override

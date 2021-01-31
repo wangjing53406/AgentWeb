@@ -24,65 +24,64 @@ import android.webkit.WebView;
  * @since 1.0.0
  */
 public class IndicatorHandler implements IndicatorController {
-	private BaseIndicatorSpec mBaseIndicatorSpec;
+    private BaseIndicatorSpec mBaseIndicatorSpec;
 
-	@Override
-	public void progress(WebView v, int newProgress) {
+    static IndicatorHandler getInstance() {
+        return new IndicatorHandler();
+    }
 
-		if (newProgress == 0) {
-			reset();
-		} else if (newProgress > 0 && newProgress <= 10) {
-			showIndicator();
-		} else if (newProgress > 10 && newProgress < 95) {
-			setProgress(newProgress);
-		} else {
-			setProgress(newProgress);
-			finish();
-		}
+    @Override
+    public void progress(WebView v, int newProgress) {
 
-	}
+        if (newProgress == 0) {
+            reset();
+        } else if (newProgress > 0 && newProgress <= 10) {
+            showIndicator();
+        } else if (newProgress > 10 && newProgress < 95) {
+            setProgress(newProgress);
+        } else {
+            setProgress(newProgress);
+            finish();
+        }
 
-	@Override
-	public BaseIndicatorSpec offerIndicator() {
-		return this.mBaseIndicatorSpec;
-	}
+    }
 
-	public void reset() {
+    @Override
+    public BaseIndicatorSpec offerIndicator() {
+        return this.mBaseIndicatorSpec;
+    }
 
-		if (mBaseIndicatorSpec != null) {
-			mBaseIndicatorSpec.reset();
-		}
-	}
+    public void reset() {
 
-	@Override
-	public void finish() {
-		if (mBaseIndicatorSpec != null) {
-			mBaseIndicatorSpec.hide();
-		}
-	}
+        if (mBaseIndicatorSpec != null) {
+            mBaseIndicatorSpec.reset();
+        }
+    }
 
-	@Override
-	public void setProgress(int n) {
-		if (mBaseIndicatorSpec != null) {
-			mBaseIndicatorSpec.setProgress(n);
-		}
-	}
+    @Override
+    public void finish() {
+        if (mBaseIndicatorSpec != null) {
+            mBaseIndicatorSpec.hide();
+        }
+    }
 
-	@Override
-	public void showIndicator() {
+    @Override
+    public void setProgress(int n) {
+        if (mBaseIndicatorSpec != null) {
+            mBaseIndicatorSpec.setProgress(n);
+        }
+    }
 
-		if (mBaseIndicatorSpec != null) {
-			mBaseIndicatorSpec.show();
-		}
-	}
+    @Override
+    public void showIndicator() {
 
-	static IndicatorHandler getInstance() {
-		return new IndicatorHandler();
-	}
+        if (mBaseIndicatorSpec != null) {
+            mBaseIndicatorSpec.show();
+        }
+    }
 
-
-	IndicatorHandler inJectIndicator(BaseIndicatorSpec baseIndicatorSpec) {
-		this.mBaseIndicatorSpec = baseIndicatorSpec;
-		return this;
-	}
+    IndicatorHandler inJectIndicator(BaseIndicatorSpec baseIndicatorSpec) {
+        this.mBaseIndicatorSpec = baseIndicatorSpec;
+        return this;
+    }
 }

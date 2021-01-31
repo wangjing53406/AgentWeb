@@ -20,14 +20,15 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static com.just.agentweb.AgentWebConfig.WEBVIEW_DEFAULT_TYPE;
 
@@ -36,6 +37,7 @@ import static com.just.agentweb.AgentWebConfig.WEBVIEW_DEFAULT_TYPE;
  * @since 1.0.0
  */
 public class DefaultWebCreator implements WebCreator {
+    private static final String TAG = DefaultWebCreator.class.getSimpleName();
     private Activity mActivity;
     private ViewGroup mViewGroup;
     private boolean mIsNeedDefaultProgress;
@@ -53,7 +55,6 @@ public class DefaultWebCreator implements WebCreator {
     private WebView mWebView = null;
     private FrameLayout mFrameLayout = null;
     private View mTargetProgress;
-    private static final String TAG = DefaultWebCreator.class.getSimpleName();
     private int mWebViewType = WEBVIEW_DEFAULT_TYPE;
 
     /**
@@ -129,15 +130,9 @@ public class DefaultWebCreator implements WebCreator {
         this.mIWebLayout = webLayout;
     }
 
-
-    public void setWebView(WebView webView) {
-        mWebView = webView;
-    }
-
     public FrameLayout getFrameLayout() {
         return mFrameLayout;
     }
-
 
     public View getTargetProgress() {
         return mTargetProgress;
@@ -183,6 +178,10 @@ public class DefaultWebCreator implements WebCreator {
     @Override
     public WebView getWebView() {
         return mWebView;
+    }
+
+    public void setWebView(WebView webView) {
+        mWebView = webView;
     }
 
     @Override

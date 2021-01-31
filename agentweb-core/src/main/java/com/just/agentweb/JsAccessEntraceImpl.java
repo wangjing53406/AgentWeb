@@ -32,13 +32,13 @@ public class JsAccessEntraceImpl extends BaseJsAccessEntrace {
     private WebView mWebView;
     private Handler mHandler = new Handler(Looper.getMainLooper());
 
-    public static JsAccessEntraceImpl getInstance(WebView webView) {
-        return new JsAccessEntraceImpl(webView);
-    }
-
     private JsAccessEntraceImpl(WebView webView) {
         super(webView);
         this.mWebView = webView;
+    }
+
+    public static JsAccessEntraceImpl getInstance(WebView webView) {
+        return new JsAccessEntraceImpl(webView);
     }
 
     private void safeCallJs(final String s, final ValueCallback valueCallback) {
@@ -56,7 +56,7 @@ public class JsAccessEntraceImpl extends BaseJsAccessEntrace {
             safeCallJs(params, callback);
             return;
         }
-        super.callJs(params,callback);
+        super.callJs(params, callback);
     }
 
 

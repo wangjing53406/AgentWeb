@@ -26,7 +26,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
-import androidx.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.webkit.ValueCallback;
@@ -61,6 +60,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import androidx.annotation.NonNull;
+
 import static com.just.agentweb.ActionActivity.KEY_ACTION;
 import static com.just.agentweb.ActionActivity.KEY_FILE_CHOOSER_INTENT;
 import static com.just.agentweb.ActionActivity.KEY_FROM_INTENTION;
@@ -74,6 +75,18 @@ import static com.just.agentweb.ActionActivity.start;
  */
 public class FileChooser {
     /**
+     * Activity Request Code
+     */
+    public static final int REQUEST_CODE = 0x254;
+    /**
+     * TAG
+     */
+    private static final String TAG = FileChooser.class.getSimpleName();
+    /**
+     * 修复某些特定手机拍照后，立刻获取照片为空的情况
+     */
+    public static int MAX_WAIT_PHOTO_MS = 8 * 1000;
+    /**
      * Activity
      */
     private Activity mActivity;
@@ -85,10 +98,6 @@ public class FileChooser {
      * ValueCallback<Uri[]> After LOLLIPOP
      */
     private ValueCallback<Uri[]> mUriValueCallbacks;
-    /**
-     * Activity Request Code
-     */
-    public static final int REQUEST_CODE = 0x254;
     /**
      * 当前系统是否高于 Android 5.0 ；
      */
@@ -105,10 +114,6 @@ public class FileChooser {
      * 是否为Js Channel
      */
     private boolean mJsChannel = false;
-    /**
-     * TAG
-     */
-    private static final String TAG = FileChooser.class.getSimpleName();
     /**
      * 当前 WebView
      */
@@ -137,12 +142,19 @@ public class FileChooser {
      * 选择文件类型
      */
     private String mAcceptType = "*/*";
-    /**
-     * 修复某些特定手机拍照后，立刻获取照片为空的情况
-     */
-    public static int MAX_WAIT_PHOTO_MS = 8 * 1000;
-
     private Handler.Callback mJsChannelHandler$Callback;
+    private ActionActivity.PermissionListener mPermissionListener = new ActionActivity.PermissionListener() {
+
+        @Override
+        public void onRequestPermissionsResult(@NonNull String[] permissions, @NonNull int[] grantResults, Bundle extras) {
+
+            boolean tag = true;
+            tag = AgentWebUtils.hasPermission(mActivity, Arrays.asList(permissions)) ? true : false;
+            permissionResult(tag, extras.getInt(KEY_FROM_INTENTION));
+
+        }
+    };
+
 
     public FileChooser(Builder builder) {
 
@@ -163,6 +175,62 @@ public class FileChooser {
 
     }
 
+    // 必须执行在子线程, 会阻塞直到文件转换完成;
+    public static Queue<FileParcel> convertFile(String[] paths) throws Exception {
+
+        if (paths == null || paths.length == 0) {
+            return null;
+        }
+        int tmp = Runtime.getRuntime().availableProcessors() + 1;
+        int result = paths.length > tmp ? tmp : paths.length;
+        Executor mExecutor = Executors.newFixedThreadPool(result);
+        final Queue<FileParcel> mQueue = new LinkedBlockingQueue<>();
+        CountDownLatch mCountDownLatch = new CountDownLatch(paths.length);
+
+        int i = 1;
+        for (String path : paths) {
+
+            if (TextUtils.isEmpty(path)) {
+                mCountDownLatch.countDown();
+                continue;
+            }
+
+            mExecutor.execute(new EncodeFileRunnable(path, mQueue, mCountDownLatch, i++));
+
+        }
+        mCountDownLatch.await();
+
+        if (!((ThreadPoolExecutor) mExecutor).isShutdown()) {
+            ((ThreadPoolExecutor) mExecutor).shutdownNow();
+        }
+        return mQueue;
+    }
+
+    static String convertFileParcelObjectsToJson(Collection<FileParcel> collection) {
+
+        if (collection == null || collection.size() == 0) {
+            return null;
+        }
+        Iterator<FileParcel> mFileParcels = collection.iterator();
+        JSONArray mJSONArray = new JSONArray();
+        try {
+            while (mFileParcels.hasNext()) {
+                JSONObject jo = new JSONObject();
+                FileParcel mFileParcel = mFileParcels.next();
+                jo.put("contentPath", mFileParcel.getContentPath());
+                jo.put("fileBase64", mFileParcel.getFileBase64());
+                jo.put("mId", mFileParcel.getId());
+                mJSONArray.put(jo);
+            }
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
+        return mJSONArray + "";
+    }
+
+    public static Builder newBuilder(Activity activity, WebView webView) {
+        return new Builder().setActivity(activity).setWebView(webView);
+    }
 
     public void openFileChooser() {
         if (!AgentWebUtils.isUIThread()) {
@@ -241,7 +309,6 @@ public class FileChooser {
         };
     }
 
-
     private void openFileChooserInternal() {
         boolean needVideo = false;
         // 在此支持视频拍摄
@@ -283,7 +350,6 @@ public class FileChooser {
 
     }
 
-
     private Handler.Callback getCallBack() {
         return new Handler.Callback() {
             @Override
@@ -305,7 +371,6 @@ public class FileChooser {
             }
         };
     }
-
 
     private void onCameraAction() {
 
@@ -358,18 +423,6 @@ public class FileChooser {
         ActionActivity.setChooserListener(this.getChooserListener());
         ActionActivity.start(mActivity, mAction);
     }
-
-    private ActionActivity.PermissionListener mPermissionListener = new ActionActivity.PermissionListener() {
-
-        @Override
-        public void onRequestPermissionsResult(@NonNull String[] permissions, @NonNull int[] grantResults, Bundle extras) {
-
-            boolean tag = true;
-            tag = AgentWebUtils.hasPermission(mActivity, Arrays.asList(permissions)) ? true : false;
-            permissionResult(tag, extras.getInt(KEY_FROM_INTENTION));
-
-        }
-    };
 
     private void permissionResult(boolean grant, int from_intention) {
         if (from_intention == FROM_INTENTION_CODE >> 2) {
@@ -475,7 +528,6 @@ public class FileChooser {
         }
         return;
     }
-
 
     private void belowLollipopUriCallback(Intent data) {
 
@@ -662,38 +714,6 @@ public class FileChooser {
         }
     }
 
-    // 必须执行在子线程, 会阻塞直到文件转换完成;
-    public static Queue<FileParcel> convertFile(String[] paths) throws Exception {
-
-        if (paths == null || paths.length == 0) {
-            return null;
-        }
-        int tmp = Runtime.getRuntime().availableProcessors() + 1;
-        int result = paths.length > tmp ? tmp : paths.length;
-        Executor mExecutor = Executors.newFixedThreadPool(result);
-        final Queue<FileParcel> mQueue = new LinkedBlockingQueue<>();
-        CountDownLatch mCountDownLatch = new CountDownLatch(paths.length);
-
-        int i = 1;
-        for (String path : paths) {
-
-            if (TextUtils.isEmpty(path)) {
-                mCountDownLatch.countDown();
-                continue;
-            }
-
-            mExecutor.execute(new EncodeFileRunnable(path, mQueue, mCountDownLatch, i++));
-
-        }
-        mCountDownLatch.await();
-
-        if (!((ThreadPoolExecutor) mExecutor).isShutdown()) {
-            ((ThreadPoolExecutor) mExecutor).shutdownNow();
-        }
-        return mQueue;
-    }
-
-
     static class EncodeFileRunnable implements Runnable {
 
         private String filePath;
@@ -743,28 +763,6 @@ public class FileChooser {
         }
     }
 
-    static String convertFileParcelObjectsToJson(Collection<FileParcel> collection) {
-
-        if (collection == null || collection.size() == 0) {
-            return null;
-        }
-        Iterator<FileParcel> mFileParcels = collection.iterator();
-        JSONArray mJSONArray = new JSONArray();
-        try {
-            while (mFileParcels.hasNext()) {
-                JSONObject jo = new JSONObject();
-                FileParcel mFileParcel = mFileParcels.next();
-                jo.put("contentPath", mFileParcel.getContentPath());
-                jo.put("fileBase64", mFileParcel.getFileBase64());
-                jo.put("mId", mFileParcel.getId());
-                mJSONArray.put(jo);
-            }
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-        }
-        return mJSONArray + "";
-    }
-
     static class CovertFileThread extends Thread {
 
         private WeakReference<JsChannelCallback> mJsChannelCallback;
@@ -809,10 +807,6 @@ public class FileChooser {
                 this.callback.get().handleMessage(Message.obtain(null, "JsChannelCallback".hashCode(), value));
             }
         }
-    }
-
-    public static Builder newBuilder(Activity activity, WebView webView) {
-        return new Builder().setActivity(activity).setWebView(webView);
     }
 
     public static final class Builder {

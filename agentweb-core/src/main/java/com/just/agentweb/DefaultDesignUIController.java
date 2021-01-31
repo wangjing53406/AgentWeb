@@ -45,8 +45,8 @@ import androidx.recyclerview.widget.RecyclerView;
  */
 public class DefaultDesignUIController extends DefaultUIController {
 
-    private BottomSheetDialog mBottomSheetDialog;
     private static final int RECYCLERVIEW_ID = 0x1001;
+    private BottomSheetDialog mBottomSheetDialog;
     private Activity mActivity = null;
     private WebParentLayout mWebParentLayout;
     private LayoutInflater mLayoutInflater;
@@ -76,7 +76,7 @@ public class DefaultDesignUIController extends DefaultUIController {
                     -1,
                     null);
         } catch (Throwable throwable) {
-            if (LogUtils.isDebug()){
+            if (LogUtils.isDebug()) {
                 throwable.printStackTrace();
             }
         }
@@ -163,14 +163,6 @@ public class DefaultDesignUIController extends DefaultUIController {
         };
     }
 
-    private static class BottomSheetHolder extends RecyclerView.ViewHolder {
-        TextView mTextView;
-        public BottomSheetHolder(View itemView) {
-            super(itemView);
-            mTextView = (TextView) itemView.findViewById(android.R.id.text1);
-        }
-    }
-
     @Override
     public void onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult jsPromptResult) {
         super.onJsPrompt(view, url, message, defaultValue, jsPromptResult);
@@ -199,5 +191,14 @@ public class DefaultDesignUIController extends DefaultUIController {
             return;
         }
         onJsAlertInternal(mWebParentLayout.getWebView(), message);
+    }
+
+    private static class BottomSheetHolder extends RecyclerView.ViewHolder {
+        TextView mTextView;
+
+        public BottomSheetHolder(View itemView) {
+            super(itemView);
+            mTextView = (TextView) itemView.findViewById(android.R.id.text1);
+        }
     }
 }
